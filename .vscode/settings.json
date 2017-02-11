@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*h*h*h*h*h*hxlocmon": "cpp",
+        "xfunctional": "cpp",
+        "xutility": "cpp",
+        "type_traits": "cpp"
+    }
+}
