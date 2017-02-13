@@ -259,4 +259,50 @@ namespace tests
         ASSERT_TRUE( smartSerial.registerCommand( "d a", wrap( testMethod ) ) );
         ASSERT_FALSE( smartSerial.registerCommand( "f a", wrap( testMethod ) ) );
     }
+
+    TEST_F( SmartSerialTest, TooManyCommands )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        SmartSerial smartSerial( &mockStream );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "a", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "b", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "c", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "d", wrap( testMethod ) ) );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "a b", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "b b", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "c b", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "d b", wrap( testMethod ) ) );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "a c", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "b c", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "c c", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "d c", wrap( testMethod ) ) );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "a d", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "b d", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "c d", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "d d", wrap( testMethod ) ) );
+
+        ASSERT_FALSE( smartSerial.registerCommand( "a b c", wrap( testMethod ) ) );
+    }
+
+    TEST_F( SmartSerialTest, OverrideCommand )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        SmartSerial smartSerial( &mockStream );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "a + b", wrap( testMethodWithArguments ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "a + b", wrap( testMethod ) ) );
+
+        mockStream.m_strBuffer = "a + b?";
+        smartSerial.poll();
+
+        ASSERT_TRUE( g_bTestMethodCalled );
+    }
 }
