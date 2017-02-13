@@ -22,14 +22,16 @@ private:
     {
         node* m_arrChildren[ MAX_COMMANDS_PER_NODE ];
         size_t uChildrenCount;
-        CallbackWrapperInterface* m_pCommand;
         char keyword[ MAX_COMMAND_SIZE + 1 ];
+        CallbackWrapperInterface* m_pCommand;
 
         node();
         node( CallbackWrapperInterface* pCommand );
     };
 
     const char* getNextParameter( const char* strBuffer );
+    bool iterate( const char*& strCommand, const char*& strNextCommand );
+    bool find( const char* strKeyword, size_t uLength, node* pNode, node*& pFoundNode );
 
     char m_strCommand[ MAX_COMMAND_SIZE + 1 ];
 

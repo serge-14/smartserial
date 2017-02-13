@@ -30,6 +30,56 @@ SmartSerial::SmartSerial( StreamInterface* pStream ) :
 
 }
 
+const char* SmartSerial::getNextParameter( const char* strBuffer )
+{
+    while( strBuffer[ 0 ] != '\0' && strBuffer[ 0 ] != COMMAND_SPLIT_SIGN )
+    {
+        strBuffer++;
+    }
+
+    return strBuffer;
+}
+
+bool SmartSerial::iterate( const char*& strCommand, const char*& strNextCommand )
+{
+    while( *strNextCommand == COMMAND_SPLIT_SIGN )
+    {
+        strNextCommand++;
+    }
+
+    strCommand = strNextCommand;
+
+    strNextCommand = getNextParameter( strCommand );
+
+    if( strCommand == strNextCommand )
+    {
+        return false;
+    }
+
+    size_t uKeywordLength = strNextCommand - strCommand;
+    if( uKeywordLength > MAX_COMMAND_SIZE )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool SmartSerial::find( const char* strKeyword, size_t uLength, node* pNode, node*& pFoundNode )
+{
+    for( size_t j = 0; j < pNode->uChildrenCount; j++ )
+    {
+        if( pNode->m_arrChildren[ j ] != nullptr &&
+            strncmp( strKeyword, pNode->m_arrChildren[ j ]->keyword, uLength ) == 0 )
+        {
+            pFoundNode = pNode->m_arrChildren[ j ];
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool SmartSerial::registerCommand( const char* arrKeywords, CallbackWrapperInterface* pCallback )
 {
     size_t uStart = 0;
@@ -39,34 +89,9 @@ bool SmartSerial::registerCommand( const char* arrKeywords, CallbackWrapperInter
     const char* strCommand = arrKeywords;
     const char* strNextCommand = arrKeywords;
 
-    do
+    while( iterate( strCommand, strNextCommand ) )
     {
-        strNextCommand = getNextParameter( strCommand );
-
-        if( strCommand == strNextCommand )
-        {
-            break;
-        }
-
-        size_t uKeywordLength = strNextCommand - strCommand;
-        if( uKeywordLength > MAX_COMMAND_SIZE )
-        {
-            return false;
-        }
-
-        bool found = false;
-
-        for( size_t j = 0; j < pCurrentNode->uChildrenCount; j++ )
-        {
-            if( pCurrentNode->m_arrChildren[ j ] != nullptr &&
-                strncmp( strCommand, pCurrentNode->m_arrChildren[ j ]->keyword, strNextCommand - strCommand ) == 0 )
-            {
-                pCurrentNode = pCurrentNode->m_arrChildren[ j ];
-                found = true;
-            }
-        }
-
-        if( !found )
+        if( !find( strCommand, strNextCommand - strCommand, pCurrentNode, pCurrentNode ) )
         {
             if( pCurrentNode->uChildrenCount >= MAX_COMMANDS_PER_NODE )
             {
@@ -82,29 +107,16 @@ bool SmartSerial::registerCommand( const char* arrKeywords, CallbackWrapperInter
 
             pCurrentNode = pCurrentNode->m_arrChildren[ pCurrentNode->uChildrenCount - 1 ];
         }
-
-        while( *strNextCommand == COMMAND_SPLIT_SIGN )
-        {
-            strNextCommand++;
-        }
-
-        strCommand = strNextCommand;
     }
-    while( true );
+
+    if( pCurrentNode == &m_nodeRoot )
+    {
+        return false;
+    }
 
     pCurrentNode->m_pCommand = pCallback;
 
     return true;
-}
-
-const char* SmartSerial::getNextParameter( const char* strBuffer )
-{
-    while( strBuffer[ 0 ] != '\0' && strBuffer[ 0 ] != COMMAND_SPLIT_SIGN )
-    {
-        strBuffer++;
-    }
-
-    return strBuffer;
 }
 
 void SmartSerial::poll()
@@ -121,46 +133,13 @@ void SmartSerial::poll()
         const char* strCommand = m_strCommand;
         const char* strNextCommand = m_strCommand;
 
-        do
+        while( iterate( strCommand, strNextCommand ) )
         {
-            strNextCommand = getNextParameter( strCommand );
-
-            if( strCommand == strNextCommand )
+            if( !find( strCommand, strNextCommand - strCommand, pCurrentNode, pCurrentNode ) )
             {
                 break;
             }
-
-            size_t uKeywordLength = strNextCommand - strCommand;
-            if( uKeywordLength > MAX_COMMAND_SIZE )
-            {
-                return;
-            }
-
-            bool found = false;
-
-            for( size_t j = 0; j < pCurrentNode->uChildrenCount; j++ )
-            {
-                if( pCurrentNode->m_arrChildren[ j ] != nullptr &&
-                    strncmp( strCommand, pCurrentNode->m_arrChildren[ j ]->keyword, strNextCommand - strCommand ) == 0 )
-                {
-                    pCurrentNode = pCurrentNode->m_arrChildren[ j ];
-                    found = true;
-                }
-            }
-
-            if( !found )
-            {
-                break;
-            }
-
-            while( *strNextCommand == COMMAND_SPLIT_SIGN )
-            {
-                strNextCommand++;
-            }
-
-            strCommand = strNextCommand;
         }
-        while( true );
 
         if( pCurrentNode->m_pCommand == nullptr )
         {
@@ -171,28 +150,14 @@ void SmartSerial::poll()
         size_t uCommandIndex = 0;
         size_t uIndex = 0;
 
-        do
+        strNextCommand = strCommand;
+
+        while( iterate( strCommand, strNextCommand ) )
         {
-            strNextCommand = getNextParameter( strCommand );
-
-            if( strCommand == strNextCommand )
-            {
-                break;
-            }
-
             strncpy( arrParameters[ uCommandIndex ], strCommand, strNextCommand - strCommand );
             arrParameters[ uCommandIndex ][ strNextCommand - strCommand ] = 0;
             uCommandIndex++;
-
-            while( strNextCommand[ 0 ] == COMMAND_SPLIT_SIGN )
-            {
-                strNextCommand++;
-            }
-
-            strCommand = strNextCommand;
         }
-        while( true );
-
 
         const char* argv[ MAX_PARAMETERS_PER_COMMAND ];
 
@@ -200,6 +165,7 @@ void SmartSerial::poll()
         {
             argv[ i ] = arrParameters[ i ];
         }
+
         pCurrentNode->m_pCommand->invoke( argv, uCommandIndex );
     }
 }
