@@ -1,6 +1,7 @@
 #include "Converter.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 template<>
 int convert_string<int>( const char* str )
@@ -24,4 +25,10 @@ template<>
 const char* convert_string( const char* str )
 {
     return str;
+}
+
+template<>
+bool convert_string( const char* str )
+{
+    return strcmp( str, "true" ) == 0;
 }

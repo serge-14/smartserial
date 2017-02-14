@@ -19,4 +19,7 @@ float convert_string( const char* str );
 template<>
 const char* convert_string( const char* str );
 
+template<>
+bool convert_string( const char* str );
+
 #endif //_CONVERTER_SMART_SERIAL_LIB_
