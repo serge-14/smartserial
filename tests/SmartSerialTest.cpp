@@ -52,6 +52,12 @@ namespace tests
             g_uTestMethodSum = a1 + a2 + a3 + a4;
         }
 
+        static void testMethodWithTwoArguments( int a1, int a2 )
+        {
+            g_bTestMethodCalled = true;
+            g_uTestMethodSum = a1 * a2;
+        }
+
         static bool g_bTestMethodCalled;
         static int g_uTestMethodSum;
     };
@@ -212,9 +218,9 @@ namespace tests
 
         SmartSerial smartSerial( &mockStream );
 
-        ASSERT_TRUE( smartSerial.registerCommand( "command_keyword_is_very_big test23", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "very_big test23", wrap( testMethod ) ) );
 
-        mockStream.m_strBuffer = "command_keyword_is_very_big test23?";
+        mockStream.m_strBuffer = "very_big test23?";
         smartSerial.poll();
 
         ASSERT_TRUE( g_bTestMethodCalled );
@@ -304,5 +310,137 @@ namespace tests
         smartSerial.poll();
 
         ASSERT_TRUE( g_bTestMethodCalled );
+    }
+
+    TEST_F( SmartSerialTest, OneLetterKeyword )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        GenericSmartSerial<4, 1, 4, 16, 4> smartSerial( &mockStream );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "a + b", wrap( testMethodWithArguments ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "a bb b", wrap( testMethod ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "a b cc", wrap( testMethod ) ) );
+
+        mockStream.m_strBuffer = "a + b 25 10 2 35?";
+        smartSerial.poll();
+
+        ASSERT_TRUE( g_bTestMethodCalled );
+        ASSERT_EQ( g_uTestMethodSum, 25 + 10 + 2 + 35 );
+    }
+
+    TEST_F( SmartSerialTest, MaximumOneCommand )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        GenericSmartSerial<1, 3, 4, 16, 4> smartSerial( &mockStream );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "aaa", wrap( testMethod ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "bbb", wrap( testMethod ) ) );
+    }
+
+    TEST_F( SmartSerialTest, MaximumTwoParameters )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        GenericSmartSerial<6, 3, 4, 16, 2> smartSerial( &mockStream );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "a * b", wrap( testMethodWithTwoArguments ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "a + b", wrap( testMethodWithArguments ) ) );
+
+        mockStream.m_strBuffer = "a * b 25 2?";
+        smartSerial.poll();
+
+        ASSERT_TRUE( g_bTestMethodCalled );
+        ASSERT_EQ( g_uTestMethodSum, 50 );
+
+        g_bTestMethodCalled = false;
+
+        mockStream.m_strBuffer = "a + b 25 10 2 35?";
+        smartSerial.poll();
+
+        ASSERT_FALSE( g_bTestMethodCalled );
+    }
+
+    TEST_F( SmartSerialTest, Buffer4Bytes )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        GenericSmartSerial<6, 16, 4, 4, 2> smartSerial( &mockStream );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "command 1", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "command 2", wrap( testMethod ) ) );
+
+        mockStream.m_strBuffer = "command 1?";
+        smartSerial.poll();
+
+        ASSERT_FALSE( g_bTestMethodCalled );
+    }
+
+    TEST_F( SmartSerialTest, OneCommandPerNode )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        GenericSmartSerial<6, 16, 1, 4, 2> smartSerial( &mockStream );
+
+        ASSERT_TRUE( smartSerial.registerCommand( "a 1", wrap( testMethod ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "a 2", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "a 1 3", wrap( testMethod ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "a 1 2", wrap( testMethod ) ) );
+    }
+
+    TEST_F( SmartSerialTest, Minimalistic )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        GenericSmartSerial<1, 1, 1, 1, 1> smartSerial( &mockStream );
+
+        ASSERT_FALSE( smartSerial.registerCommand( "aa", wrap( testMethod ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "a 1", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "a", wrap( testMethod ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "a 2", wrap( testMethod ) ) );
+
+        mockStream.m_strBuffer = "a?";
+        smartSerial.poll();
+
+        ASSERT_TRUE( g_bTestMethodCalled );
+
+        g_bTestMethodCalled = false;
+
+        mockStream.m_strBuffer = "a 1?";
+        smartSerial.poll();
+
+        ASSERT_TRUE( g_bTestMethodCalled );
+    }
+
+    TEST_F( SmartSerialTest, MinimalisticWithBigBuffer )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        GenericSmartSerial<1, 1, 1, 16, 1> smartSerial( &mockStream );
+
+        ASSERT_FALSE( smartSerial.registerCommand( "aa", wrap( testMethod ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "a 1", wrap( testMethod ) ) );
+        ASSERT_TRUE( smartSerial.registerCommand( "a", wrap( testMethod ) ) );
+        ASSERT_FALSE( smartSerial.registerCommand( "a 2", wrap( testMethod ) ) );
+
+        mockStream.m_strBuffer = "a?";
+        smartSerial.poll();
+
+        ASSERT_TRUE( g_bTestMethodCalled );
+
+        g_bTestMethodCalled = false;
+
+        mockStream.m_strBuffer = "a 1?";
+        smartSerial.poll();
+
+        ASSERT_FALSE( g_bTestMethodCalled );
     }
 }

@@ -1,7 +1,7 @@
 #ifndef _STREAM_INTERFACE_SMART_SERIAL_LIB_
 #define _STREAM_INTERFACE_SMART_SERIAL_LIB_
 
-#include "SmartSerialDefines.h"
+#include <stdlib.h>
 
 struct StreamInterface
 {

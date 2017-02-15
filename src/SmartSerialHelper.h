@@ -1,15 +1,17 @@
 #ifndef _SMART_SERIAL_HELPER_LIB_
 #define _SMART_SERIAL_HELPER_LIB_
 
+#include <stdlib.h>
+
 struct StreamInterface;
 struct CallbackWrapperInterface;
 
-template<int TotalCommands, int CommandsPerNode, int BufferSize, int ParametersCount>
+template<int TotalCommands, int KeywordSize, int CommandsPerNode, int BufferSize, int ParametersCount>
 class GenericSmartSerial;
 
 class SmartSerialHelper
 {
-    template<int TotalCommands, int CommandsPerNode, int BufferSize, int ParametersCount>
+    template<int TotalCommands, int KeywordSize, int CommandsPerNode, int BufferSize, int ParametersCount>
     friend class GenericSmartSerial;
 private:
     static const char* getNextParameter( const char* strBuffer );

@@ -1,9 +1,11 @@
 #ifndef _SMART_SERIAL_LIB_
 #define _SMART_SERIAL_LIB_
 
+#include <stdlib.h>
+
 #include "SmartSerialHelper.h"
 
-template<int TotalCommands, int CommandsPerNode, int BufferSize, int ParametersCount>
+template<int MaxNodeCount, int KeywordSize, int CommandsPerNode, int BufferSize, int ParametersCount>
 class GenericSmartSerial
 {
 public:
@@ -20,10 +22,10 @@ public:
 private:
     struct node
     {
-        node* m_arrChildren[ CommandsPerNode ];
-        size_t uChildrenCount;
-        char keyword[ BufferSize + 1 ];
         CallbackWrapperInterface* m_pCommand;
+        size_t uChildrenCount;
+        node* m_arrChildren[ CommandsPerNode ];
+        char keyword[ KeywordSize + 1 ];
 
         node() :
             m_pCommand( nullptr ),
@@ -44,12 +46,12 @@ private:
 
     StreamInterface* m_pStream;
     size_t m_uUsedCommands;
-    node m_nodes[ TotalCommands ];
+    node m_nodes[ MaxNodeCount ];
     node m_nodeRoot;
 };
 
-template<int TotalCommands, int CommandsPerNode, int BufferSize, int ParametersCount>
-inline bool GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, ParametersCount>::registerCommand( const char* arrKeywords, CallbackWrapperInterface* pCallback )
+template<int MaxNodeCount, int KeywordSize, int CommandsPerNode, int BufferSize, int ParametersCount>
+inline bool GenericSmartSerial<MaxNodeCount, KeywordSize, CommandsPerNode, BufferSize, ParametersCount>::registerCommand( const char* arrKeywords, CallbackWrapperInterface* pCallback )
 {
     size_t uStart = 0;
 
@@ -58,7 +60,7 @@ inline bool GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, Param
     const char* strCommand = arrKeywords;
     const char* strNextCommand = arrKeywords;
 
-    while( SmartSerialHelper::iterate( strCommand, strNextCommand, BufferSize ) )
+    while( SmartSerialHelper::iterate( strCommand, strNextCommand, KeywordSize ) )
     {
         if( !find( strCommand, strNextCommand - strCommand, pCurrentNode, pCurrentNode ) )
         {
@@ -67,7 +69,7 @@ inline bool GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, Param
                 return false;
             }
 
-            if( m_uUsedCommands >= TotalCommands )
+            if( m_uUsedCommands >= MaxNodeCount )
             {
                 return false;
             }
@@ -83,6 +85,11 @@ inline bool GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, Param
         }
     }
 
+    if( strNextCommand - strCommand > KeywordSize )
+    {
+        return false;
+    }
+
     if( pCurrentNode == &m_nodeRoot )
     {
         return false;
@@ -93,8 +100,8 @@ inline bool GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, Param
     return true;
 }
 
-template<int TotalCommands, int CommandsPerNode, int BufferSize, int ParametersCount>
-inline void GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, ParametersCount>::poll()
+template<int MaxNodeCount, int KeywordSize, int CommandsPerNode, int BufferSize, int ParametersCount>
+inline void GenericSmartSerial<MaxNodeCount, KeywordSize, CommandsPerNode, BufferSize, ParametersCount>::poll()
 {
     if( SmartSerialHelper::next( m_pStream, m_strCommand, BufferSize ) )
     {
@@ -103,7 +110,7 @@ inline void GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, Param
         const char* strCommand = m_strCommand;
         const char* strNextCommand = m_strCommand;
 
-        while( SmartSerialHelper::iterate( strCommand, strNextCommand, BufferSize ) )
+        while( SmartSerialHelper::iterate( strCommand, strNextCommand, KeywordSize ) )
         {
             if( !find( strCommand, strNextCommand - strCommand, pCurrentNode, pCurrentNode ) )
             {
@@ -118,11 +125,10 @@ inline void GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, Param
 
         char arrParameters[ ParametersCount ][ BufferSize ];
         size_t uCommandIndex = 0;
-        size_t uIndex = 0;
 
         strNextCommand = strCommand;
 
-        while( SmartSerialHelper::iterate( strCommand, strNextCommand, BufferSize ) )
+        while( SmartSerialHelper::iterate( strCommand, strNextCommand, BufferSize ) && uCommandIndex < ParametersCount )
         {
             SmartSerialHelper::copy( arrParameters[ uCommandIndex ], strCommand, strNextCommand - strCommand );
 
@@ -140,8 +146,8 @@ inline void GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, Param
     }
 }
 
-template<int TotalCommands, int CommandsPerNode, int BufferSize, int ParametersCount>
-inline bool GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, ParametersCount>::find( const char* strKeyword, size_t uLength, node* pNode, node*& pFoundNode )
+template<int MaxNodeCount, int KeywordSize, int CommandsPerNode, int BufferSize, int ParametersCount>
+inline bool GenericSmartSerial<MaxNodeCount, KeywordSize, CommandsPerNode, BufferSize, ParametersCount>::find( const char* strKeyword, size_t uLength, node* pNode, node*& pFoundNode )
 {
     for( size_t j = 0; j < pNode->uChildrenCount; j++ )
     {
@@ -155,7 +161,7 @@ inline bool GenericSmartSerial<TotalCommands, CommandsPerNode, BufferSize, Param
     return false;
 }
 
-typedef GenericSmartSerial<16, 4, 32, 4> SmartSerial;
+typedef GenericSmartSerial<16, 8, 4, 32, 4> SmartSerial;
 
 
 #endif //_SMART_SERIAL_LIB_
