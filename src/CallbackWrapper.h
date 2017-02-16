@@ -1,6 +1,8 @@
 #ifndef _CALLBACK_WRAPPER_SMART_SERIAL_LIB_
 #define _CALLBACK_WRAPPER_SMART_SERIAL_LIB_
 
+#include <stdlib.h>
+
 #include "CallbackWrapperInterface.h"
 #include "Converter.h"
 
@@ -8,7 +10,7 @@ class empty_parameter { };
 
 typedef void( *SimpleFunction )( );
 
-template<size_t Count, typename A1 = empty_parameter, typename A2 = empty_parameter, typename A3 = empty_parameter, typename A4 = empty_parameter>
+template<size_t Count, typename A1 = empty_parameter, typename A2 = empty_parameter, typename A3 = empty_parameter, typename A4 = empty_parameter, typename A5 = empty_parameter, typename A6 = empty_parameter>
 struct CallbackWrapper : public CallbackWrapperInterface
 {
     SimpleFunction m_pCallback;
@@ -40,6 +42,14 @@ struct CallbackWrapper : public CallbackWrapperInterface
         else if( argc == Count && Count == 4 )
         {
             reinterpret_cast<void( *)( A1, A2, A3, A4 )>( m_pCallback )( convert_string<A1>( argv[ 0 ] ), convert_string<A2>( argv[ 1 ] ), convert_string<A3>( argv[ 2 ] ), convert_string<A4>( argv[ 3 ] ) );
+        }
+        else if( argc == Count && Count == 5 )
+        {
+            reinterpret_cast<void( *)( A1, A2, A3, A4, A5 )>( m_pCallback )( convert_string<A1>( argv[ 0 ] ), convert_string<A2>( argv[ 1 ] ), convert_string<A3>( argv[ 2 ] ), convert_string<A4>( argv[ 3 ] ), convert_string<A5>( argv[ 4 ] ) );
+        }
+        else if( argc == Count && Count == 6 )
+        {
+            reinterpret_cast<void( *)( A1, A2, A3, A4, A5, A6 )>( m_pCallback )( convert_string<A1>( argv[ 0 ] ), convert_string<A2>( argv[ 1 ] ), convert_string<A3>( argv[ 2 ] ), convert_string<A4>( argv[ 3 ] ), convert_string<A5>( argv[ 4 ] ), convert_string<A6>( argv[ 5 ] ) );
         }
     }
 };

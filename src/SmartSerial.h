@@ -53,8 +53,6 @@ private:
 template<int MaxNodeCount, int KeywordSize, int CommandsPerNode, int BufferSize, int ParametersCount>
 inline bool GenericSmartSerial<MaxNodeCount, KeywordSize, CommandsPerNode, BufferSize, ParametersCount>::registerCommand( const char* arrKeywords, CallbackWrapperInterface* pCallback )
 {
-    size_t uStart = 0;
-
     node* pCurrentNode = &m_nodeRoot;
 
     const char* strCommand = arrKeywords;
