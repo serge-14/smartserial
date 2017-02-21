@@ -18,7 +18,7 @@ file(GLOB SMARTSERIALLIB_SRCS ${PROJECT_SOURCE_DIR}/src/*.cpp)
 add_library(${PROJECT_NAME_STR} STATIC ${SMARTSERIALLIB_SRCS} ${SMARTSERIALLIB_PRIVATE_HDRS})
 
 include_directories(${COMMON_INCLUDES})
-target_compile_features(${PROJECT_NAME_STR} PRIVATE)
+target_compile_features(${PROJECT_NAME_STR} PRIVATE cxx_range_for)
 
 #-------------------
 # Test
