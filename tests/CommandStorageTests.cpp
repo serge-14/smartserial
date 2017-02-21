@@ -42,4 +42,11 @@ namespace tests
         ASSERT_TRUE( storage.wrap( command ) != nullptr );
         ASSERT_TRUE( storage.wrap( command ) == nullptr );
     }
+
+    TEST( CommandStorageTests, Nullptr )
+    {
+        CommandStorage<2> storage;
+
+        ASSERT_TRUE( storage.wrap( nullptr ) == nullptr );
+    }
 }

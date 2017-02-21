@@ -394,6 +394,16 @@ namespace tests
         ASSERT_FALSE( smartSerial.registerCommand( "a 1 2", wrap( testMethod ) ) );
     }
 
+    TEST_F( SmartSerialTest, RegisterNullptr )
+    {
+        MockStream mockStream;
+        mockStream.m_bAvailable = true;
+
+        GenericSmartSerial<6, 16, 1, 4, 2> smartSerial( &mockStream );
+
+        ASSERT_FALSE( smartSerial.registerCommand( "a 1", nullptr ) );
+    }
+
     TEST_F( SmartSerialTest, Minimalistic )
     {
         MockStream mockStream;
