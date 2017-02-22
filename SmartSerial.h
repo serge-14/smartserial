@@ -13,7 +13,7 @@ public:
         m_pStream( pStream ),
         m_uUsedCommands( 0 )
     {
-
+        static_assert( ParametersCount < 6, "Can't have more than 6 parameters per node" );
     }
 
     bool registerCommand( const char* arrKeywords, CallbackWrapperInterface* pCallback );
