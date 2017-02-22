@@ -65,8 +65,9 @@ void loop()
 
 There are two parameters `MaxNodeCount` and `CommandsPerNode` which may be unclear. Both defines size of the tree which is going to be build in `GenericSmartSerial`.
 
-MaxNodeCount - maximum amount of tree nodes can be created to hold commands
-CommandsPerNode - maximum amount of children a node can have
+`MaxNodeCount` - maximum amount of tree nodes can be created to hold commands
+
+`CommandsPerNode` - maximum amount of children a node can have
 
 For example, by adding commands:
 
