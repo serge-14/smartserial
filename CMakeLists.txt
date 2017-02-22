@@ -30,7 +30,7 @@ add_definitions(${MSVC_COMPILER_DEFS})
 enable_testing()
 set(PROJECT_TEST_NAME ${PROJECT_NAME_STR}_test)
 include_directories(${GTEST_INCLUDE_DIRS} ${COMMON_INCLUDES})
-include_directories(${GTEST_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR}/src)
+include_directories(${GTEST_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
 
 file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/tests/*.cpp)
 add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
